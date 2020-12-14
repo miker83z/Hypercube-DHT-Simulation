@@ -1,0 +1,51 @@
+# random.seed 1234567890
+simulation.endtime 10^6
+simulation.logtime 10^6
+
+simulation.experiments 1
+
+SIZE = 27
+MAXSIZE = 32
+
+network.size SIZE
+
+
+protocol.tr UniformRandomTransport
+{
+	mindelay 0
+	maxdelay 0
+}
+
+protocol.my hypeercube.EProtocol
+{
+	transport tr
+}
+
+
+init.create hypeercube.NetworkPeer 
+{
+	protocol my
+	
+}
+
+control.dnet DynamicNetwork
+{
+	add MAXSIZE - SIZE
+	#minsize 3000
+	maxsize MAXSIZE
+	step 100000
+init.0 DynamicNode
+	{      
+		protocol my
+	}
+}
+
+
+
+control.uxer hypeercube.Uxer
+{
+	protocol my
+	step 1000000
+}
+
+	
