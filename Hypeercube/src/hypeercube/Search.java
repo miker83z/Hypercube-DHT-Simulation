@@ -52,7 +52,7 @@ public class Search {
 	public void removeKey() {
 		this.collectidBit.remove(0);
 	}
-	//eccoci
+	
 	public ArrayList<String> getCollect(){
 		return this.collectidBit;
 	}
