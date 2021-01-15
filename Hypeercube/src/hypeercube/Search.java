@@ -13,16 +13,27 @@ public class Search {
 	public boolean check=false;
 	public ArrayList<String> collectidBit = new ArrayList<String>();
 	public int cont=0;
+	public int cMex;
 
 	/** costruttore PIN search */
-	public Search(int kw) {
+	public Search(int kw, int cMex) {
 		this.nKey=kw;
+		this.cMex=cMex;
 	}
 	
 	/** costruttore SUPERSET search */
-	public Search(int kw, int number) {
+	public Search(int kw, int number, int cMex) {
 		this.nKey=kw;
 		this.number=number;
+		this.cMex=cMex;
+	}
+	
+	public void addMex() {
+		cMex++;
+	}
+	
+	public int getNMex() {
+		return this.cMex;
 	}
 	
 	public int getKey() {

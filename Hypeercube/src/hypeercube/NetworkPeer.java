@@ -10,15 +10,22 @@ public class NetworkPeer implements Control{
 	 
 	/** Stringa per recuperare il nome del protocollo dal file di conf */
 	   private static final String PAR_PROT = "protocol";
+	   
+	   /** Stringa per recuperare il numero massimo di nodi della rete dal file di conf */
+	   private static final String PAR_MAXSIZE = "maxsize";
+	   
 	   /** Pid del protocollo */
 	   private int pid;
- 
+	   
+	   private int maxsize;
+	   
 	   /** Dimensione dell'ipercubo */
 	   private int Hypercube;
 	   
 	   
 	   public NetworkPeer(String prefix) {
 		   this.pid = Configuration.getPid(prefix + "." + PAR_PROT);
+		   this.maxsize = Configuration.getInt(prefix + "." + PAR_MAXSIZE);
 		}
 
 
@@ -44,7 +51,7 @@ public class NetworkPeer implements Control{
 	
 	/** Metodo utilizzato per calcolare la lunghezza dei bit del numero dei nodi della rete */
 	 public Integer createBinary() {
-		 String binarID = Integer.toBinaryString(Network.size()-1);
+		 String binarID = Integer.toBinaryString(maxsize-1);
 		 return binarID.length();
 	 }	
 	 

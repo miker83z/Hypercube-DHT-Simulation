@@ -14,12 +14,15 @@ import peersim.core.Control;
 import peersim.core.Network;
 import peersim.core.Node;
 
+
 public class Uxer implements Control{
 	
 	/** Stringa per recuperare il nome del protocollo dal file di conf */
     private String PAR_PROT = "protocol";
     
     private String PAR_MAXSIZE = "maxsize";
+    
+    private String PAR_LAP = "lap";
     
     /** Pid del protocollo */
     public int pid;
@@ -38,15 +41,28 @@ public class Uxer implements Control{
 	
 	private int maxsize;
 	
+	private int lap;
+	
 	private int kw;
+	
+	private int request;
 	
 	private ArrayList<String> cont = new ArrayList<String>();
     
     private ArrayList<Node> Neighbors;
     
+    public String exc;
+    
+    public int max;
+    
+    public ArrayList<String> exchange = new ArrayList<String>();
+    
+    public Result result = new Result();
+    
     public Uxer(String prefix) {
     	this.pid = Configuration.getPid(prefix + "." + PAR_PROT);
     	this.maxsize = Configuration.getInt(prefix + "." + PAR_MAXSIZE); 
+    	this.lap = Configuration.getInt(prefix + "." + PAR_LAP);
     }
 
 	@Override
@@ -82,8 +98,8 @@ public class Uxer implements Control{
         	if(resp==false) System.out.println("Inserire un numero");           		
     	}
 		
-		int request = Integer.parseInt(dec);
-		
+		 request = Integer.parseInt(dec);
+		//sceglie un nodo con type true cioe quelli di size
 			boolean type2=false;
 			while(!type2) {
 			Random rand1 = new Random();
@@ -163,27 +179,18 @@ public class Uxer implements Control{
 	
 	        		case (1):
 	        			System.out.println("Ricerca PIN SEARCH:");
-	        			System.out.println("Inserisci un numero corrispondente alla Keyword al fine di recuperare oggetti corrispondenti alla keyword stessa: " + "\n" +
-	        								"Numero compreso tra 0 e " + maxsize + " (escluso) corrispondente alla dimensione massima dell'ipercubo");
-	       				
-	        			boolean cnumb = false;
-	        			boolean dnumb = false;
-	        			String kw1;
-	    	        	while(dnumb==false) {
-	    	        		Scanner scan = new Scanner(System.in);
-	    	            	kw1 = scan.nextLine();
-	    	            	if (kw1.matches("[0-9]+")) cnumb = true;
-	    	            	
-	    	            	if(cnumb==true) {
-	    	            		 kw = Integer.parseInt(kw1);
-	    	            		if(kw < maxsize) dnumb=true;
-	    	            	}
-	    	            	
-	    	            	if(dnumb==false || cnumb==false) System.out.println("Inserire un numero idoneo per la ricerca");           		
-	    	        	}
-
-	    	        	
-	       				Search pin = new Search(kw);
+	        		
+	        		int turn = 0;
+	        		exchange.add(String.valueOf(maxsize));
+        			exchange.add(String.valueOf(request));
+        			
+	        		while (turn<lap) {
+	        			
+	        			Random r = new Random();
+	        			int kw1 = r.nextInt(Network.size());
+	        			
+	        			int cMex = 0;
+	       				Search pin = new Search(kw1, cMex);
 	       			
 	       				boolean type=false;
 	       				while(!type) {
@@ -197,22 +204,35 @@ public class Uxer implements Control{
 	       
 	        			e.processEvent(node, pid, pin);
 	        			
-	        			boolean result=false;
+	        			max=0;
 	        			for(int j=0; j<Network.size();j++) {
 	        				
 	            			Node node2 = (Node) Network.get(j);
 	            			EProtocol ep = ((EProtocol) node2.getProtocol(this.pid));
+	            			
+	            			if(ep.getContMex()>0) {
+	            				if(ep.getContMex()> max) {
+		            				max = ep.getContMex();
+		            			}
+	            				ep.removeCont();
+	            			}
+
 	            			if(!(ep.getListObHash().isEmpty())) {
 	            				System.out.println("Ecco gli hash degli oggetti: " + ep.getListObHash());
 	                			ep.removeListObHash();
-	                			result=true;
-	            			}
+	            				}
 	            			
-	            			}       		
-	        			
-	        			if(result==false) System.out.println("Le Keywords inserite non risultano presenti");
-	        			break;
-	        			
+	            			}  
+	        			exc = String.valueOf(max);
+        				exchange.add(exc);
+	        			turn++;
+	        		}
+	        		
+	        		result.printResult(exchange);
+    				exchange.clear();
+	        		
+	        		break;
+	      
 	        		case (2):
 	        			System.out.println("Ricerca SUPERSET SEARCH:");
         				System.out.println("Inserisci un numero corrispondente alla keyword al fine di recuperare un insieme di oggetti descrivibili dalla keyword stessa: " + "\n" +

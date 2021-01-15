@@ -4,8 +4,8 @@ simulation.logtime 10^6
 
 simulation.experiments 1
 
-SIZE = 27
-MAXSIZE = 32
+SIZE = 200
+MAXSIZE = 512
 
 network.size SIZE
 
@@ -25,6 +25,7 @@ protocol.my hypeercube.EProtocol
 init.create hypeercube.NetworkPeer 
 {
 	protocol my
+	maxsize MAXSIZE
 	
 }
 
@@ -36,6 +37,7 @@ init.dnet DynamicNetwork
 init.0 DynamicNode
 	{      
 		protocol my
+		maxsize MAXSIZE
 	}
 }
 
@@ -50,6 +52,7 @@ control.uxer hypeercube.Uxer
 {
 	protocol my
 	maxsize MAXSIZE
+	lap 5
 	step 1000000
 }
 

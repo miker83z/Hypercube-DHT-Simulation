@@ -7,7 +7,9 @@ import peersim.dynamics.NodeInitializer;
 
 public class DynamicNode implements NodeInitializer{
 	
-	private String PAR_PROT = "protocol";
+	private static final String PAR_PROT = "protocol";
+	
+	private static final String PAR_MAXSIZE = "maxsize";
 
 	private int pid = 0;
 	
@@ -17,9 +19,12 @@ public class DynamicNode implements NodeInitializer{
 	
 	private int Hypercube;
 	
+	private int maxsize;
+	
 
 	public DynamicNode(String prefix) {
 		pid = Configuration.getPid(prefix + "." + PAR_PROT);
+		maxsize = Configuration.getInt(prefix + "." + PAR_MAXSIZE);
 	}
 
 	@Override
@@ -45,7 +50,7 @@ public class DynamicNode implements NodeInitializer{
 	
 	/** Metodo utilizzato per calcolare la lunghezza dei bit del numero dei nodi della rete */
 	 public Integer createBinary() {
-		 String binarID = Integer.toBinaryString(Network.size()-1);
+		 String binarID = Integer.toBinaryString(maxsize-1);
 		 return binarID.length();
 	 }	
 	 

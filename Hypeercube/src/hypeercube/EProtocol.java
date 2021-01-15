@@ -55,6 +55,8 @@ public class EProtocol implements EDProtocol{
 	
 	private Node n;
 	
+	public int nMex;
+	
 	public EProtocol(String prefix) { 
 		this.prefix = prefix;
 		p = new Parameters();
@@ -89,7 +91,14 @@ public class EProtocol implements EDProtocol{
 		return this.type;
 	}
 	
-
+	public int getContMex() {
+		return this.nMex;
+	}
+	
+	public void removeCont() {
+		this.nMex=0;
+	}
+	
 	public void addNeigh(ArrayList<Node> neigh) {
 		this.Neighbors = neigh;
 	}
@@ -219,6 +228,7 @@ public class EProtocol implements EDProtocol{
 				System.out.println("sono uguali? : " + check);
 				goal = bitset;
 				
+					
 				    PinSearch(ep, node, p.pid, search, bt);
 			}
 			
@@ -228,7 +238,10 @@ public class EProtocol implements EDProtocol{
 	
 	/** Ricerca PIN search */
 	 public void PinSearch(EProtocol ep, Node node, int pid, Search search, BitSet bt) {
-	    	if(check==true){		
+		 	nMex = search.getNMex();
+		 	
+	    	if(check==true){
+	    		System.out.println("Ecco il numero degli scambi: " + nMex);
 				if(!(KeyHash.isEmpty())) {
 					System.out.println("possiamo ritirare!");
 					Iterator<String> kwt = KeyHash.iterator(); 
@@ -238,6 +251,7 @@ public class EProtocol implements EDProtocol{
 			        }
 				}
 			}else {
+				search.addMex();
 				checkNeighbors(pid, search, bt);
 			}
 	    }
