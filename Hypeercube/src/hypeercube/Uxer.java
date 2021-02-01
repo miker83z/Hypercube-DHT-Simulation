@@ -57,7 +57,7 @@ public class Uxer implements Control{
     
     public ArrayList<String> exchange = new ArrayList<String>();
     
-    public Result result = new Result();
+    public Result resultP = new Result();
     
     public Uxer(String prefix) {
     	this.pid = Configuration.getPid(prefix + "." + PAR_PROT);
@@ -74,15 +74,15 @@ public class Uxer implements Control{
 					Node node = (Node) Network.get(i);	
 					EProtocol ne = ((EProtocol) node.getProtocol(this.pid));
 					base=ne.getHyper();
-					System.out.println("Id del nodo: " + node.getID());
-					System.out.println("BitId del nodo: " + createBinaryID((int)node.getID()));
+					//System.out.println("Id del nodo: " + node.getID());
+					//System.out.println("BitId del nodo: " + createBinaryID((int)node.getID()));
 					Neighbors = ne.Neighbors;
 
 					for(int j=0; j< Neighbors.size();j++) {
 						String id = createBinaryID((int)Neighbors.get(j).getID());
-						System.out.println("ecco i vicini :" + id);
+						//System.out.println("ecco i vicini :" + id);
 					}	
-					System.out.println("#############");
+					//System.out.println("#############");
 				}
 		
 		
@@ -129,19 +129,19 @@ public class Uxer implements Control{
 				obj = obj + e;
 				q++;
 			}
-			System.out.println("ecco la stringa dell'oggetto: " + obj);
+			//System.out.println("ecco la stringa dell'oggetto: " + obj);
 			String key = "";
 			int k=0;
 			while(k!=base) {
-				int keyword = getRandomBit(0, 2);
+				int keyword = getRandomN(0, 2);
 				key = key + keyword;
 				k++;
 			}
 			
-			System.out.println("ecco la keyword dell'oggetto: " + key);
+			//System.out.println("ecco la keyword dell'oggetto: " + key);
 			String hashObj = Sha256(obj);
 			Insert insert = new Insert(hashObj, key);
-			System.out.println("ecco l'hash dell'oggetto: " + hashObj);
+			//System.out.println("ecco l'hash dell'oggetto: " + hashObj);
 			e.processEvent(node, pid, insert);
 			rete++;
 		}
@@ -151,8 +151,8 @@ public class Uxer implements Control{
 		for(int j=0; j<Network.size();j++) {
 			Node node1 = (Node) Network.get(j);
 			EProtocol ne = ((EProtocol) node1.getProtocol(this.pid));
-			System.out.println("ecco la lista keyword e oggetti: "+ createBinaryID((int) node1.getID()) + " = "+ ne.getKeyHash());
-			System.out.println("-------------------------------------");
+			//System.out.println("ecco la lista keyword e oggetti: "+ createBinaryID((int) node1.getID()) + " = "+ ne.getKeyHash());
+			//System.out.println("-------------------------------------");
 			}   
 		
 		System.out.println( "Selezionare il tipo di ricerca da effettuare: " + "\n" +
@@ -204,6 +204,7 @@ public class Uxer implements Control{
 	       
 	        			e.processEvent(node, pid, pin);
 	        			
+	        			boolean result=false;
 	        			max=0;
 	        			for(int j=0; j<Network.size();j++) {
 	        				
@@ -216,58 +217,44 @@ public class Uxer implements Control{
 		            			}
 	            				ep.removeCont();
 	            			}
-
+	            			
 	            			if(!(ep.getListObHash().isEmpty())) {
 	            				System.out.println("Ecco gli hash degli oggetti: " + ep.getListObHash());
 	                			ep.removeListObHash();
+	                			result=true;
 	            				}
 	            			
-	            			}  
+	            			}
+	        			if(result==false) System.out.println("Non ci sono riferimenti ad oggetti con la keyword inserita.");
+	        			System.out.println("Ecco il numero degli scambi: " + max);
 	        			exc = String.valueOf(max);
         				exchange.add(exc);
 	        			turn++;
 	        		}
 	        		
-	        		result.printResult(exchange);
+	        		resultP.printResult(exchange);
     				exchange.clear();
 	        		
 	        		break;
 	      
 	        		case (2):
 	        			System.out.println("Ricerca SUPERSET SEARCH:");
-        				System.out.println("Inserisci un numero corrispondente alla keyword al fine di recuperare un insieme di oggetti descrivibili dalla keyword stessa: " + "\n" +
-        								   "Numero compreso tra 0 e " + maxsize + " (escluso) corrispondente alla dimensione massima dell'ipercubo");
 	        			
-        				boolean cnumb1 = false;
-	        			boolean dnumb1 = false;
-	        			String kw2;
-	    	        	while(dnumb1==false) {
-	    	        		Scanner scan = new Scanner(System.in);
-	    	            	kw2 = scan.nextLine();
-	    	            	if (kw2.matches("[0-9]+")) cnumb1 = true;
-	    	            	
-	    	            	if(cnumb1==true) {
-	    	            		 kw = Integer.parseInt(kw2);
-	    	            		if(kw < maxsize) dnumb1=true;
-	    	            	}
-	    	            	
-	    	            	if(dnumb1==false || cnumb1==false) System.out.println("Inserire un numero idoneo per la ricerca");           		
-	    	        	}
+	        			int turnS = 0;
+	        			exchange.add(String.valueOf(maxsize));
+	        			exchange.add(String.valueOf(request));
+	        			
+	        			
+	        			while (turnS<lap) {
 
-	       				System.out.println("Inserisci il numero massimo di risultati che intendi ottenere: ");
-	       				
-	       				boolean num = false;
-	       				String number="";
-	       				while(num==false) {
-	       					Scanner scan5 = new Scanner(System.in);
-	       					number = scan5.nextLine();
-	       					if (number.matches("[0-9]+")) num = true;
-	       	            	if(num==false) System.out.println("Inserire un numero");
-	       				}
-	       				
-	       				int numb = Integer.parseInt(number);
-	       				
-	       				Search superset = new Search(kw, numb);
+	        				Random s = new Random();
+		        			int kwS = s.nextInt(Network.size());
+	        				
+		        			//int numb = getRandomN(1, 21);
+		        			int numb = 10;
+		        			
+		        			int cMex = 0;
+	       				Search superset = new Search(kwS, numb, cMex);
 	       				
 	       				boolean type1=false;
 	       				while(!type1) {
@@ -281,22 +268,39 @@ public class Uxer implements Control{
 	       
 	        			e.processEvent(node, pid, superset);
 	        			
-	        			
 	        			boolean result1=false;
+	        			max=0;
 	        			for(int j=0; j<Network.size();j++) {
 	        				
 	            			Node node3 = (Node) Network.get(j);
 	            				
 	            			EProtocol ep1 = ((EProtocol) node3.getProtocol(this.pid));
+	            			
+	            			if(ep1.getContMex()>0) {
+	            				if(ep1.getContMex()> max) {
+		            				max = ep1.getContMex();
+		            			}
+	            				ep1.removeCont();
+	            			}
+	            			
+	            			
 	            			if(!(ep1.getListObHash().isEmpty())) {
 	            				System.out.println("Ecco gli hash degli oggetti: " + ep1.getListObHash());
 	                			ep1.removeListObHash();
 	                			result1=true;
 	            				}
 	            			
-	            			}       		
-	        			
-	        			if(result1==false) System.out.println("Le Keywords inserite non risultano presenti");
+	            			}
+	        			if(result1==false) System.out.println("Non ci sono riferimenti ad oggetti con la keyword inserita.");
+		        			System.out.println("Ecco il numero degli scambi: " + max);
+		        			exc = String.valueOf(max);
+	        				exchange.add(exc);
+	        				//exchange.add(String.valueOf(numb));
+		        			turnS++;
+	        			}
+	        			resultP.printResultS(exchange);
+	    				exchange.clear();
+		        		
 	        			break;
 	        			
 	        		case (0):
@@ -369,7 +373,7 @@ public class Uxer implements Control{
 			 return IDBinario;
 		 }
 		 
-		 public int getRandomBit(int min, int max) {
+		 public int getRandomN(int min, int max) {
 			    Random random = new Random();
 			    return random.nextInt(max - min) + min;
 			}

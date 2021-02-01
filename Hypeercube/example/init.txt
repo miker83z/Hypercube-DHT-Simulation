@@ -4,8 +4,8 @@ simulation.logtime 10^6
 
 simulation.experiments 1
 
-SIZE = 200
-MAXSIZE = 512
+SIZE = 256
+MAXSIZE = 256
 
 network.size SIZE
 

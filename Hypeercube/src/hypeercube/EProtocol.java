@@ -134,26 +134,26 @@ public class EProtocol implements EDProtocol{
 			keyword = insert.getKeyword();
 			hashObject = insert.getHashObj();
 			boolean check = checkFind(keyword, ep.getBinary());
-			System.out.println("ecco bitId della parola chiave: " + keyword);
+			//System.out.println("ecco bitId della parola chiave: " + keyword);
 			BitSet s1 = createBitset(keyword);
-			System.out.println("ecco bitset della parola chiave: " + s1);
-			System.out.println("ecco bitId del nodo: " + ep.getBinary());
+			//System.out.println("ecco bitset della parola chiave: " + s1);
+			//System.out.println("ecco bitId del nodo: " + ep.getBinary());
 			bitset = createBitset(ep.getBinary());
-			System.out.println("ecco bitset del nodo: " + bitset);
-			System.out.println("sono uguali? : " + check);
+			//System.out.println("ecco bitset del nodo: " + bitset);
+			//System.out.println("sono uguali? : " + check);
 			
 			if(check==true){
 				KeyHash.add(hashObject);
-				System.out.println("Keywords inserite!");
+				//System.out.println("Keywords inserite!");
 			}else {
 				BitSet escape = getMax();
 				int ix=0;
 				boolean other = true;
 				goal = bitset;
 				for(int i=0;i<Neighbors.size();i++) {
-					System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
+					//System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
 					BitSet nt = createBitset(createBinaryID((int) Neighbors.get(i).getID()));
-					System.out.println("ecco bitset del nodo vicino: " + nt);
+					//System.out.println("ecco bitset del nodo vicino: " + nt);
 					/** calcolo quale dei vicini del nodo ha distanza di hamming minore rispetto al target */
 		
 					BitSet target = xor(s1,nt);
@@ -172,10 +172,10 @@ public class EProtocol implements EDProtocol{
 					if(other==true) {
 						n = (Node) Neighbors.get(ix);
 					}
-					System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
-					System.out.println("####################");
+					//System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
+					//System.out.println("####################");
 				}
-				System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
+				//System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
 				EProtocol ep1 = ((EProtocol) n.getProtocol(p.pid));
 				ep1.processEvent(n, p.pid, insert);
 			}
@@ -188,6 +188,7 @@ public class EProtocol implements EDProtocol{
 			EProtocol ep = ((EProtocol) node.getProtocol(p.pid));
 						
 			if(search.getNumber()!=0) {
+				if(search.getNumber() > search.getCont()) {
 				boolean control = search.getCheck();
 				if(control==false) {
 					int kw = search.getKey();
@@ -198,34 +199,35 @@ public class EProtocol implements EDProtocol{
 				}
 				if(listidRef.size()!=0) {
 					for(int i=0; i<listidRef.size();i++) {
-						System.out.println("nodi da visitare: " +listidRef.get(i));
+						//System.out.println("nodi da visitare: " +listidRef.get(i));
 					}
 					check = checkFind(listidRef.get(0), ep.getBinary());
-					System.out.println("ecco bitId della parola chiave: " + listidRef.get(0));
+					//System.out.println("ecco bitId della parola chiave: " + listidRef.get(0));
 					BitSet bt = createBitset(listidRef.get(0));
-					System.out.println("ecco bitset della parola chiave: " + bt);
-					System.out.println("ecco bitId del nodo: " + ep.getBinary());
+					//System.out.println("ecco bitset della parola chiave: " + bt);
+					//System.out.println("ecco bitId del nodo: " + ep.getBinary());
 					bitset = createBitset(ep.getBinary());
-					System.out.println("ecco bitset del nodo: " + bitset);
-					System.out.println("sono uguali? : " + check);
+					//System.out.println("ecco bitset del nodo: " + bitset);
+					//System.out.println("sono uguali? : " + check);
 					goal = bitset;
 					
-					 if(search.getNumber() > search.getCont()) {
+					// if(search.getNumber() > search.getCont()) {
 						 SuperSet(ep, node, p.pid, search, bt);
-					 }
+					// }
 					 
+				}
 				}
 			}else {
 				int kw = search.getKey();
 				String idRef = createBinaryID(kw);
 				check = checkFind(idRef, ep.getBinary());
-				System.out.println("ecco bitId della parola chiave: " + idRef);
+				//System.out.println("ecco bitId della parola chiave: " + idRef);
 				BitSet bt = createBitset(idRef);
-				System.out.println("ecco bitset della parola chiave: " + bt);
-				System.out.println("ecco bitId del nodo: " + ep.getBinary());
+				//System.out.println("ecco bitset della parola chiave: " + bt);
+				//System.out.println("ecco bitId del nodo: " + ep.getBinary());
 				bitset = createBitset(ep.getBinary());
-				System.out.println("ecco bitset del nodo: " + bitset);
-				System.out.println("sono uguali? : " + check);
+				//System.out.println("ecco bitset del nodo: " + bitset);
+				//System.out.println("sono uguali? : " + check);
 				goal = bitset;
 				
 					
@@ -241,9 +243,8 @@ public class EProtocol implements EDProtocol{
 		 	nMex = search.getNMex();
 		 	
 	    	if(check==true){
-	    		System.out.println("Ecco il numero degli scambi: " + nMex);
 				if(!(KeyHash.isEmpty())) {
-					System.out.println("possiamo ritirare!");
+					//System.out.println("possiamo ritirare!");
 					Iterator<String> kwt = KeyHash.iterator(); 
 			        while (kwt.hasNext()) {
 			        	String value = kwt.next();
@@ -258,9 +259,10 @@ public class EProtocol implements EDProtocol{
 	 
 	 
 	 public void SuperSet(EProtocol ep, Node node, int pid, Search search, BitSet bt) {
-	    	if(check==true){		
+		 nMex = search.getNMex();
+		 if(check==true){		
 				if(!(KeyHash.isEmpty())) {	
-					System.out.println("possiamo ritirare!");
+					//System.out.println("possiamo ritirare!");
 					Iterator<String> kwt = KeyHash.iterator(); 
 			        while (kwt.hasNext()) {
 			        	String value = kwt.next();
@@ -273,17 +275,20 @@ public class EProtocol implements EDProtocol{
 				
 				search.removeKey();
 				if(search.getCollect().size()!=0) {
+					search.addMex();
 					checkNeighborsWithList(pid, search, bt);
 				}
 				
 				}else {
 					search.removeKey();
 					if(search.getCollect().size()!=0) {
+						search.addMex();
 						checkNeighborsWithList(pid, search, bt);
 					}
 				}
 				
 			}else {
+				search.addMex();
 				checkNeighbors(pid, search, bt);
 			}
 	 }
@@ -295,9 +300,9 @@ public class EProtocol implements EDProtocol{
 			int ix=0;
 			
 			for(int i=0;i<Neighbors.size();i++) {
-				System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
+				//System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
 				BitSet nt = createBitset(createBinaryID((int) Neighbors.get(i).getID()));
-				System.out.println("ecco bitset del nodo vicino: " + nt);
+				//System.out.println("ecco bitset del nodo vicino: " + nt);
 				/** calcolo quale dei vicini del nodo ha distanza di hamming minore rispetto al target */
 				BitSet target = xor(bt,nt);
 				
@@ -315,10 +320,10 @@ public class EProtocol implements EDProtocol{
 				if(other==true) {
 					n = (Node) Neighbors.get(ix);
 				}
-				System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
-				System.out.println("####################");
+				//System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
+				//System.out.println("####################");
 			}
-			System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
+			//System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
 			EProtocol ep1 = ((EProtocol) n.getProtocol(pid));
 			ep1.processEvent(n, pid, search);
 	 }
@@ -331,9 +336,9 @@ public class EProtocol implements EDProtocol{
 			int ix=0;
 			
 			for(int i=0;i<Neighbors.size();i++) {
-				System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
+				//System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
 				BitSet nt = createBitset(createBinaryID((int) Neighbors.get(i).getID()));
-				System.out.println("ecco bitset del nodo vicino: " + nt);
+				//System.out.println("ecco bitset del nodo vicino: " + nt);
 				listidRef = search.getCollect();
 				BitSet s3 = createBitset(listidRef.get(0));
 				
@@ -354,10 +359,10 @@ public class EProtocol implements EDProtocol{
 				if(other==true) {
 					n = (Node) Neighbors.get(ix);
 				}
-				System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
-				System.out.println("####################");
+				//System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
+				//System.out.println("####################");
 			}
-			System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
+			//System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
 
 			EProtocol ep1 = ((EProtocol) n.getProtocol(pid));
 			ep1.processEvent(n, pid, search);	
