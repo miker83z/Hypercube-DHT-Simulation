@@ -3,9 +3,10 @@ package hypeercube;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 
 import peersim.config.Configuration;
-import peersim.core.Network;
 import peersim.core.Node;
 import peersim.edsim.EDProtocol;
 
@@ -23,17 +24,11 @@ public class EProtocol implements EDProtocol{
 	
 	private Parameters p;
 	
-	/** porzione di hash assegnato al nodo. Il nodo gestirà oggetti con porzione di hash corrispondente a quella assegnata al nodo */
-	public String pHash;
-	
 	/** dimensione dell'ipercubo */
 	public int hyper;
 	
 	/** tiene traccia del fatto che il nodo possa essere reale o creato per tenere la dimensione corretta dell'ipercubo */
 	public boolean type;
-	
-	/** riferimento alla divisione delle lettere in base alla dimensione r dell'ipercubo */
-	public String[] ref;
 	
 	/** tengo traccia dei vicini del nodo*/
 	public ArrayList<Node> Neighbors;
@@ -41,8 +36,7 @@ public class EProtocol implements EDProtocol{
 	/** gli oggetti mantenuti dal nodo sono salvati in questo hashmap */
 	private HashMap<String, String> objects = new HashMap<String, String>();
 	
-	/** le keyword associate al nodo sono salvate in questo hashmap */
-	private HashMap<String, String> RefKey = new HashMap<String, String>();
+	private HashSet<String> KeyHash = new HashSet<String>();
 	
 	/** tiene traccia degli oggetti richiesti dall'utente e dopo ogni richiesta viene svuotato. Una specie di memoria temporanea */
 	public ArrayList<String> listOb = new ArrayList<String>();
@@ -53,7 +47,7 @@ public class EProtocol implements EDProtocol{
 	
 	public String keyword;
 	
-	public String Object;
+	public String hashObject;
 	
 	public boolean check;
 	
@@ -61,22 +55,16 @@ public class EProtocol implements EDProtocol{
 	
 	private Node n;
 	
+	public int nMex;
+	
 	public EProtocol(String prefix) { 
 		this.prefix = prefix;
 		p = new Parameters();
 		p.tid = Configuration.getPid(prefix + "." + PAR_TRANSPORT);
 	}
 	
-	public void porzHash(String s) {
-		pHash = s;
-	}
-	
 	public void Hyper(int h) {
 		 hyper = h;
-	}
-	
-	public String getHash() {
-		return this.pHash;
 	}
 	
 	public int getHyper() {
@@ -103,12 +91,12 @@ public class EProtocol implements EDProtocol{
 		return this.type;
 	}
 	
-	public void addRef(String[] ref) {
-		this.ref=ref;
+	public int getContMex() {
+		return this.nMex;
 	}
 	
-	public String[] getRef() {
-		return this.ref;
+	public void removeCont() {
+		this.nMex=0;
 	}
 	
 	public void addNeigh(ArrayList<Node> neigh) {
@@ -123,74 +111,51 @@ public class EProtocol implements EDProtocol{
 		return this.objects;
 	}
 	
-	public HashMap<String,String> getListKey(){
-		return this.RefKey;
+    public HashSet<String> getKeyHash(){
+    	return this.KeyHash;
+    }
+	
+	public ArrayList<String> getListObHash(){
+		return this.listObHash;
 	}
 	
-	public ArrayList<String> getListOb(){
-		return this.listOb;
-	}
-	
-	public void removeListOb() {
-		this.listOb.clear();
+	public void removeListObHash() {
+		this.listObHash.clear();
 	}
 
 	@Override
 	public void processEvent(Node node, int pid, Object event) {
 		p.pid = pid;
-		/** Inserimento oggetto */
-		if (event.getClass() == InsertObject.class) {
-			InsertObject obj = (InsertObject) event;
-			System.out.println("indice del nodo: " + node.getIndex());
-			obj.Sha256(obj.getObject());
-			String hash = obj.getHash().substring(0, 1);
-			System.out.println("ecco l'Hash completo: " + obj.getHash());
-			System.out.println("ecco iniziale hash: " + hash);
+		
+		/** Inserimento keyword e hash dell'oggetto */
+		if(event.getClass() == Insert.class) {
+			Insert insert = (Insert) event;
 			EProtocol ep = ((EProtocol) node.getProtocol(p.pid));
-			System.out.println("hash del nodo: " + ep.getHash());
-			System.out.println("#############");
-			if(ep.getHash().equals(hash)) {
-				objects.put(obj.getHash(), obj.getObject());
-				System.out.println("Oggetto inserito!");
-			}else {
-				int index = node.getIndex() + 1;
-				if(index >= Network.size()) index = 0;
-				Node node1 = (Node) Network.get(index);
-				EProtocol ep1 = ((EProtocol) node1.getProtocol(p.pid));
-				ep1.processEvent(node1, p.pid, obj);
-			}
-		}
-		/** Inserimento keyword */
-		if(event.getClass() == InsertKeyword.class) {
-			InsertKeyword kw = (InsertKeyword) event;
-			EProtocol ep = ((EProtocol) node.getProtocol(p.pid));
-			keyword = kw.getKeyword();
-			String idRef = kw.getBitRefer(ref);
-			boolean check = checkFind(idRef, ep.getBinary());
-			System.out.println("ecco bitId della parola chiave: " + idRef);
-			BitSet s1 = createBitset(idRef);
-			System.out.println("ecco bitset della parola chiave: " + s1);
-			System.out.println("ecco bitId del nodo: " + ep.getBinary());
+			keyword = insert.getKeyword();
+			hashObject = insert.getHashObj();
+			boolean check = checkFind(keyword, ep.getBinary());
+			//System.out.println("ecco bitId della parola chiave: " + keyword);
+			BitSet s1 = createBitset(keyword);
+			//System.out.println("ecco bitset della parola chiave: " + s1);
+			//System.out.println("ecco bitId del nodo: " + ep.getBinary());
 			bitset = createBitset(ep.getBinary());
-			System.out.println("ecco bitset del nodo: " + bitset);
-			System.out.println("sono uguali? : " + check);
-
+			//System.out.println("ecco bitset del nodo: " + bitset);
+			//System.out.println("sono uguali? : " + check);
+			
 			if(check==true){
-				kw.Sha256(kw.getObject());
-				Object = kw.getHash();
-				if(!(RefKey.containsKey(keyword))) 
-					RefKey.put(keyword, Object);
-				System.out.println("Keywords inserite!");
+				KeyHash.add(hashObject);
+				//System.out.println("Keywords inserite!");
 			}else {
 				BitSet escape = getMax();
 				int ix=0;
 				boolean other = true;
 				goal = bitset;
 				for(int i=0;i<Neighbors.size();i++) {
-					System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
+					//System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
 					BitSet nt = createBitset(createBinaryID((int) Neighbors.get(i).getID()));
-					System.out.println("ecco bitset del nodo vicino: " + nt);
+					//System.out.println("ecco bitset del nodo vicino: " + nt);
 					/** calcolo quale dei vicini del nodo ha distanza di hamming minore rispetto al target */
+		
 					BitSet target = xor(s1,nt);
 					
 					if(target.cardinality() <= escape.cardinality()) {
@@ -207,15 +172,15 @@ public class EProtocol implements EDProtocol{
 					if(other==true) {
 						n = (Node) Neighbors.get(ix);
 					}
-					System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
-					System.out.println("####################");
+					//System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
+					//System.out.println("####################");
 				}
-				System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
+				//System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
 				EProtocol ep1 = ((EProtocol) n.getProtocol(p.pid));
-				ep1.processEvent(n, p.pid, kw);
+				ep1.processEvent(n, p.pid, insert);
 			}
-			
 		}
+	
 		
 		/** Ricerca all'interno dell'ipercubo */
 		if(event.getClass() == Search.class) {
@@ -223,233 +188,187 @@ public class EProtocol implements EDProtocol{
 			EProtocol ep = ((EProtocol) node.getProtocol(p.pid));
 						
 			if(search.getNumber()!=0) {
+				if(search.getNumber() > search.getCont()) {
 				boolean control = search.getCheck();
 				if(control==false) {
-					 listidRef = search.getListBitRefer(ref);
+					int kw = search.getKey();
+					listidRef = search.getListBitRefer(kw, hyper);
 					 search.setCheck();
 				}else if(control==true) {
 					 listidRef = search.getCollect();
 				}
 				if(listidRef.size()!=0) {
 					for(int i=0; i<listidRef.size();i++) {
-						System.out.println("nodi da visitare: " +listidRef.get(i));
+						//System.out.println("nodi da visitare: " +listidRef.get(i));
 					}
 					check = checkFind(listidRef.get(0), ep.getBinary());
-					System.out.println("ecco bitId della parola chiave: " + listidRef.get(0));
+					//System.out.println("ecco bitId della parola chiave: " + listidRef.get(0));
 					BitSet bt = createBitset(listidRef.get(0));
-					System.out.println("ecco bitset della parola chiave: " + bt);
-					System.out.println("ecco bitId del nodo: " + ep.getBinary());
+					//System.out.println("ecco bitset della parola chiave: " + bt);
+					//System.out.println("ecco bitId del nodo: " + ep.getBinary());
 					bitset = createBitset(ep.getBinary());
-					System.out.println("ecco bitset del nodo: " + bitset);
-					System.out.println("sono uguali? : " + check);
+					//System.out.println("ecco bitset del nodo: " + bitset);
+					//System.out.println("sono uguali? : " + check);
 					goal = bitset;
 					
-					SuperSet(ep, node, p.pid, search, bt);
+					// if(search.getNumber() > search.getCont()) {
+						 SuperSet(ep, node, p.pid, search, bt);
+					// }
+					 
+				}
 				}
 			}else {
-				String idRef = search.getBitRefer(ref);
+				int kw = search.getKey();
+				String idRef = createBinaryID(kw);
 				check = checkFind(idRef, ep.getBinary());
-				System.out.println("ecco bitId della parola chiave: " + idRef);
+				//System.out.println("ecco bitId della parola chiave: " + idRef);
 				BitSet bt = createBitset(idRef);
-				System.out.println("ecco bitset della parola chiave: " + bt);
-				System.out.println("ecco bitId del nodo: " + ep.getBinary());
+				//System.out.println("ecco bitset della parola chiave: " + bt);
+				//System.out.println("ecco bitId del nodo: " + ep.getBinary());
 				bitset = createBitset(ep.getBinary());
-				System.out.println("ecco bitset del nodo: " + bitset);
-				System.out.println("sono uguali? : " + check);
+				//System.out.println("ecco bitset del nodo: " + bitset);
+				//System.out.println("sono uguali? : " + check);
 				goal = bitset;
 				
+					
 				    PinSearch(ep, node, p.pid, search, bt);
 			}
 			
 		}
-		/** Una volta ottenuta la lista degli hash corrispondenti a degli oggetti*/
-		if(event.getClass() == Obj.class) {
-			Obj obj = (Obj) event;
-			EProtocol ep = ((EProtocol) node.getProtocol(p.pid));
-			listObHash = obj.getObjHash();
-			String element="";
-			if(!(listObHash.isEmpty())){
-				 element = (listObHash.get(0)).substring(0, 1);
-				boolean check = checkFind(element, ep.getHash());
-				
-				if(check==true) {
-					listOb.add(objects.get(listObHash.get(0)));
-					obj.remove();
-					
-					if(!(listObHash.isEmpty())) {
-						int index = node.getIndex() + 1;
-						if(index >= Network.size()) index = 0;
-						 n = (Node) Network.get(index);
-						EProtocol ep1 = ((EProtocol) n.getProtocol(p.pid));
-						ep1.processEvent(n, p.pid, obj);
-					}
-					if(listObHash.isEmpty() && obj.getNumber()!=0) {
-						int index = node.getIndex() + 1;
-						if(index >= Network.size()) index = 0;
-						 n = (Node) Network.get(index);
-						EProtocol ep1 = ((EProtocol) n.getProtocol(p.pid));
-						Search s = obj.getSearch();
-						ep1.processEvent(n, p.pid, s);
-					}
-					
-				}else {
-					int index = node.getIndex() + 1;
-					if(index >= Network.size()) index = 0;
-					 n = (Node) Network.get(index);
-					EProtocol ep1 = ((EProtocol) n.getProtocol(p.pid));
-					ep1.processEvent(n, p.pid, obj);
-				}
-			}
-		}
-		
+	
 	}
 	
 	/** Ricerca PIN search */
 	 public void PinSearch(EProtocol ep, Node node, int pid, Search search, BitSet bt) {
-	    	if(check==true){		
-				if(!(RefKey.isEmpty())) {
-					System.out.println("possiamo ritirare!");
-				for (HashMap.Entry<String,String> entry : RefKey.entrySet()) {
-				     String value = entry.getValue();
-				     listObHash.add(value);
-				     System.out.println(value);
-				}
-				
-				Obj ob = new Obj(listObHash);
-				ep.processEvent(node, pid, ob);
-				
+		 	nMex = search.getNMex();
+		 	
+	    	if(check==true){
+				if(!(KeyHash.isEmpty())) {
+					//System.out.println("possiamo ritirare!");
+					Iterator<String> kwt = KeyHash.iterator(); 
+			        while (kwt.hasNext()) {
+			        	String value = kwt.next();
+			        	listObHash.add(value);
+			        }
 				}
 			}else {
-				BitSet escape = getMax();
-				int ix=0;
-				boolean other = true;
-		
-				for(int i=0;i<Neighbors.size();i++) {
-					System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
-
-					BitSet nt = createBitset(createBinaryID((int) Neighbors.get(i).getID()));
-					System.out.println("ecco bitset del nodo vicino: " + nt);
-					/** calcolo quale dei vicini del nodo ha distanza di hamming minore rispetto al target */
-					BitSet target = xor(bt,nt);
-					
-					if(target.cardinality() <= escape.cardinality()) {
-						escape = target;
-						ix=i;
-					}
-					
-					if(target.cardinality() <= goal.cardinality()) {
-						goal = target;
-						n = (Node) Neighbors.get(i);
-						other = false;
-					}
-					
-					if(other==true) {
-						n = (Node) Neighbors.get(ix);
-					}
-					System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
-					System.out.println("####################");
-				}
-				System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
-				EProtocol ep1 = ((EProtocol) n.getProtocol(pid));
-				ep1.processEvent(n, pid, search);
+				search.addMex();
+				checkNeighbors(pid, search, bt);
 			}
 	    }
 	 
 	 
 	 public void SuperSet(EProtocol ep, Node node, int pid, Search search, BitSet bt) {
-	    	if(check==true){		
-				if(!(RefKey.isEmpty())) {	
-					System.out.println("possiamo ritirare!");
-				for (HashMap.Entry<String,String> entry : RefKey.entrySet()) {
-				     String value = entry.getValue();
-				     
-				     /** aggiungiamo la lista degli hash associati agli oggetti */
-				     if(search.getNumber() > search.getCont()) {
-				    	 listObHash.add(value);
-				    	 search.addCont();
-				     }
-				     System.out.println(value);
-				}
+		 nMex = search.getNMex();
+		 if(check==true){		
+				if(!(KeyHash.isEmpty())) {	
+					//System.out.println("possiamo ritirare!");
+					Iterator<String> kwt = KeyHash.iterator(); 
+			        while (kwt.hasNext()) {
+			        	String value = kwt.next();
+			        	/** aggiungiamo la lista degli hash associati agli oggetti */
+					     if(search.getNumber() > search.getCont()) {
+					    	 listObHash.add(value);
+			        	  	 search.addCont();
+					     }
+			        }
 				
-				Obj ob = new Obj(listObHash, search.getNumber(), search);
 				search.removeKey();
-				ep.processEvent(node, pid, ob);
+				if(search.getCollect().size()!=0) {
+					search.addMex();
+					checkNeighborsWithList(pid, search, bt);
+				}
 				
 				}else {
 					search.removeKey();
 					if(search.getCollect().size()!=0) {
-						boolean other = true;	
-						BitSet escape = getMax();
-						int ix=0;
-						
-						for(int i=0;i<Neighbors.size();i++) {
-							System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
-							BitSet nt = createBitset(createBinaryID((int) Neighbors.get(i).getID()));
-							System.out.println("ecco bitset del nodo vicino: " + nt);
-							listidRef = search.getCollect();
-							BitSet s3 = createBitset(listidRef.get(0));
-							
-							/** calcolo quale dei vicini del nodo ha distanza di hamming minore rispetto al target */
-							BitSet target = xor(s3,nt);
-							
-							if(target.cardinality() <= escape.cardinality()) {
-								escape = target;
-								ix=i;
-							}
-							
-							if(target.cardinality() <= goal.cardinality()) {
-								goal = target;
-								n = (Node) Neighbors.get(i);
-								other = false;
-							}
-							
-							if(other==true) {
-								n = (Node) Neighbors.get(ix);
-							}
-							System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
-							System.out.println("####################");
-						}
-						System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
-
-						EProtocol ep1 = ((EProtocol) n.getProtocol(pid));
-						ep1.processEvent(n, pid, search);	
+						search.addMex();
+						checkNeighborsWithList(pid, search, bt);
 					}
 				}
 				
 			}else {
-				boolean other = true;
-				BitSet escape = getMax();
-				int ix=0;
-				
-				for(int i=0;i<Neighbors.size();i++) {
-					System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
-					BitSet nt = createBitset(createBinaryID((int) Neighbors.get(i).getID()));
-					System.out.println("ecco bitset del nodo vicino: " + nt);
-					/** calcolo quale dei vicini del nodo ha distanza di hamming minore rispetto al target */
-					BitSet target = xor(bt,nt);
-					
-					if(target.cardinality() <= escape.cardinality()) {
-						escape = target;
-						ix=i;
-					}
-					
-					if(target.cardinality() <= goal.cardinality()) {
-						goal = target;
-						n = (Node) Neighbors.get(i);
-						other = false;
-					}
-					
-					if(other==true) {
-						n = (Node) Neighbors.get(ix);
-					}
-					System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
-					System.out.println("####################");
-				}
-				System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
-				EProtocol ep1 = ((EProtocol) n.getProtocol(pid));
-				ep1.processEvent(n, pid, search);
+				search.addMex();
+				checkNeighbors(pid, search, bt);
 			}
-	    }
+	 }
+	 
+	 
+	 public void checkNeighbors(int pid, Search search, BitSet bt) {
+		 boolean other = true;
+			BitSet escape = getMax();
+			int ix=0;
+			
+			for(int i=0;i<Neighbors.size();i++) {
+				//System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
+				BitSet nt = createBitset(createBinaryID((int) Neighbors.get(i).getID()));
+				//System.out.println("ecco bitset del nodo vicino: " + nt);
+				/** calcolo quale dei vicini del nodo ha distanza di hamming minore rispetto al target */
+				BitSet target = xor(bt,nt);
+				
+				if(target.cardinality() <= escape.cardinality()) {
+					escape = target;
+					ix=i;
+				}
+				
+				if(target.cardinality() <= goal.cardinality()) {
+					goal = target;
+					n = (Node) Neighbors.get(i);
+					other = false;
+				}
+				
+				if(other==true) {
+					n = (Node) Neighbors.get(ix);
+				}
+				//System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
+				//System.out.println("####################");
+			}
+			//System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
+			EProtocol ep1 = ((EProtocol) n.getProtocol(pid));
+			ep1.processEvent(n, pid, search);
+	 }
+	 
+	 
+	 public void checkNeighborsWithList(int pid, Search search, BitSet bt) {
+		 
+		 boolean other = true;	
+			BitSet escape = getMax();
+			int ix=0;
+			
+			for(int i=0;i<Neighbors.size();i++) {
+				//System.out.println("ecco i vicini del nodo: " + createBinaryID((int) Neighbors.get(i).getID()));
+				BitSet nt = createBitset(createBinaryID((int) Neighbors.get(i).getID()));
+				//System.out.println("ecco bitset del nodo vicino: " + nt);
+				listidRef = search.getCollect();
+				BitSet s3 = createBitset(listidRef.get(0));
+				
+				/** calcolo quale dei vicini del nodo ha distanza di hamming minore rispetto al target */
+				BitSet target = xor(s3,nt);
+				
+				if(target.cardinality() <= escape.cardinality()) {
+					escape = target;
+					ix=i;
+				}
+				
+				if(target.cardinality() <= goal.cardinality()) {
+					goal = target;
+					n = (Node) Neighbors.get(i);
+					other = false;
+				}
+				
+				if(other==true) {
+					n = (Node) Neighbors.get(ix);
+				}
+				//System.out.println("ecco il bitset dopo lo xor: " + target.cardinality() + "   " + target);
+				//System.out.println("####################");
+			}
+			//System.out.println("ecco il bitset finale: " + goal.cardinality() + "   " + goal);
+
+			EProtocol ep1 = ((EProtocol) n.getProtocol(pid));
+			ep1.processEvent(n, pid, search);	
+		 
+	 }
+	 
 	    
 	
 	/** trasformo il numero del nodo nel corrispondente in binario */
